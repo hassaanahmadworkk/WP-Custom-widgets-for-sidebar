@@ -1,0 +1,72 @@
+
+// Register the Custom Categories Widget
+function custom_categories_widget() {
+    register_widget('Custom_Categories_Widget');
+}
+add_action('widgets_init', 'custom_categories_widget');
+
+// Define the Custom Categories Widget
+class Custom_Categories_Widget extends WP_Widget {
+
+    public function __construct() {
+        parent::__construct(
+            'custom_categories_widget', // Base ID
+            'Custom Categories', // Name
+            array('description' => __('Displays a list of categories with post counts.', 'text_domain')) // Args
+        );
+    }
+
+    public function widget($args, $instance) {
+        echo $args['before_widget'];
+        if (!empty($instance['title'])) {
+            echo $args['before_title'] . apply_filters('widget_title', $instance['title']) . $args['after_title'];
+        }
+
+        // Fetch categories
+        $categories = get_categories(array(
+            'orderby' => 'name',
+            'order' => 'ASC',
+            'show_count' => true,
+            'hierarchical' => true,
+            'title_li' => ''
+        ));
+
+        if (!empty($categories)) {
+            echo '<ul class="custom-categories">';
+            foreach ($categories as $category) {
+                ?>
+                <li class="category-item">
+                    <a href="<?php echo get_category_link($category->term_id); ?>">
+                        <?php echo $category->name; ?> <?php
+// 				echo $category->count;
+				 ?>
+                    </a>
+                </li>
+                <?php
+            }
+            echo '</ul>';
+        } else {
+            echo '<p>No categories available.</p>';
+        }
+
+        echo $args['after_widget'];
+    }
+
+    public function form($instance) {
+        $title = isset($instance['title']) ? $instance['title'] : __('Categories', 'text_domain');
+        ?>
+        <p>
+            <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>">
+        </p>
+        <?php
+    }
+
+    public function update($new_instance, $old_instance) {
+        $instance = array();
+        $instance['title'] = (!empty($new_instance['title'])) ? strip_tags($new_instance['title']) : '';
+        return $instance;
+    }
+}
+
+?>
